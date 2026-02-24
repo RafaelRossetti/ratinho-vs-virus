@@ -8,8 +8,23 @@ export class Tower {
         this.type = type;
         this.fireRate = 100; // frames
         this.timer = 0;
+        this.level = 1;
+        this.damage = type === 'pill' ? 25 : 10;
         this.image = new Image();
         this.image.src = type === 'pill' ? './pill_tower.png' : ''; // Use color if no image
+    }
+
+    upgrade() {
+        const upgradeCost = 100; // Dobro do custo original da pílula
+        if (this.game.cheese >= upgradeCost && this.level === 1) {
+            this.game.cheese -= upgradeCost;
+            this.level++;
+            this.damage *= 1.5; // +50% dano
+            this.fireRate *= 0.9; // 10% mais rápido (menos frames entre tiros)
+            this.game.updateUI();
+            return true;
+        }
+        return false;
     }
 
     update() {
@@ -31,13 +46,25 @@ export class Tower {
         );
 
         if (enemiesInRow.length > 0) {
-            this.game.projectiles.push(new Projectile(this.game, this.x + 40, this.y, this.type));
+            this.game.projectiles.push(new Projectile(this.game, this.x + 40, this.y, this.type, this.damage));
         }
     }
 
     draw(ctx) {
         if (this.image.src && this.type === 'pill') {
             ctx.drawImage(this.image, this.x - this.width / 2, this.y - this.height / 2, this.width, this.height);
+
+            // Indicador de upgrade
+            if (this.level > 1) {
+                ctx.fillStyle = '#fbbf24';
+                ctx.beginPath();
+                ctx.arc(this.x + 25, this.y - 25, 8, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 10px Inter';
+                ctx.textAlign = 'center';
+                ctx.fillText('+', this.x + 25, this.y - 21);
+            }
         } else {
             // Draw placeholders for other types
             ctx.fillStyle = this.type === 'cheese' ? '#fbbf24' : '#a855f7';
@@ -56,13 +83,13 @@ export class Tower {
 }
 
 class Projectile {
-    constructor(game, x, y, type) {
+    constructor(game, x, y, type, damage) {
         this.game = game;
         this.x = x;
         this.y = y;
         this.radius = 8;
         this.speed = 4;
-        this.damage = type === 'pill' ? 25 : 10;
+        this.damage = damage;
         this.type = type;
     }
 

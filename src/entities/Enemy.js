@@ -2,17 +2,24 @@ export class Enemy {
     constructor(game, type) {
         this.game = game;
         this.x = game.width;
-        this.y = Math.floor(Math.random() * 5) * (game.height / 5) + (game.height / 10);
+        this.y = Math.floor(Math.random() * 5) * game.gridSize + (game.gridSize / 2) + game.topOffset;
         this.width = 60;
         this.height = 60;
         this.type = type;
         this.image = new Image();
         this.image.src = './virus_basic.png';
 
+        const waveScale = 1 + (game.wave - 1) * 0.1; // 10% de bônus de recompensa por wave superior
+        this.cheeseValue = 25 * waveScale;
+
         if (type === 'fast') {
-            this.speed = Math.random() * 0.8 + 1.2;
+            this.speed = (Math.random() * 0.8 + 1.2) * 1.2; // +20% velocidade
             this.health = 50;
             this.maxHealth = 50;
+        } else if (type === 'elite') {
+            this.speed = Math.random() * 0.5 + 0.3;
+            this.health = 120; // +20% vida
+            this.maxHealth = 120;
         } else {
             this.speed = Math.random() * 0.5 + 0.3;
             this.health = 100;
@@ -33,7 +40,9 @@ export class Enemy {
 
     draw(ctx) {
         if (this.type === 'fast') {
-            ctx.filter = 'hue-rotate(90deg) brightness(1.2)';
+            ctx.filter = 'hue-rotate(90deg) brightness(1.2)'; // Amarelado
+        } else if (this.type === 'elite') {
+            ctx.filter = 'hue-rotate(280deg)'; // Avermelhado
         }
         ctx.drawImage(this.image, this.x - this.width / 2, this.y - this.height / 2, this.width, this.height);
         ctx.filter = 'none';

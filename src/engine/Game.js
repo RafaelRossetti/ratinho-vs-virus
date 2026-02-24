@@ -9,6 +9,7 @@ export class Game {
         this.height = canvas.height;
         this.cells = [];
         this.gridSize = 100;
+        this.topOffset = 100; // Espaço para a HUD
         this.enemies = [];
         this.towers = [];
         this.projectiles = [];
@@ -18,9 +19,15 @@ export class Game {
         this.gameOver = false;
         this.selectedTower = 'pill';
         this.wave = 1;
-        this.waveEnemies = 5;
-        this.enemiesSpawned = 0;
+        this.waveDuration = 60 * 60; // 60 segundos a 60fps
+        this.waveTimer = this.waveDuration;
+        this.waveEnemiesTarget = 40;
+        this.enemiesSpawnedInWave = 0;
+        this.enemiesDefeatedInWave = 0;
         this.nextWaveFrame = 0;
+        this.score = 0;
+        this.maxWaves = 10;
+        this.isVictory = false;
 
         this.bgImage = new Image();
         this.bgImage.src = './background_lab.png';
@@ -30,7 +37,7 @@ export class Game {
     }
 
     initGrid() {
-        for (let y = 0; y < this.height; y += this.gridSize) {
+        for (let y = this.topOffset; y < this.height; y += this.gridSize) {
             for (let x = 0; x < this.width; x += this.gridSize) {
                 this.cells.push({ x, y, width: this.gridSize, height: this.gridSize });
             }
@@ -46,12 +53,21 @@ export class Game {
             const mouseY = e.clientY - rect.top;
 
             const gridX = Math.floor(mouseX / this.gridSize) * this.gridSize + this.gridSize / 2;
-            const gridY = Math.floor(mouseY / this.gridSize) * this.gridSize + this.gridSize / 2;
+            const gridY = Math.floor((mouseY - this.topOffset) / this.gridSize) * this.gridSize + this.gridSize / 2 + this.topOffset;
+
+            if (mouseY < this.topOffset) return; // Não clicar na HUD
 
             const towerCosts = { 'pill': 50, 'cheese': 40, 'syrup': 100 };
             const cost = towerCosts[this.selectedTower] || 50;
 
-            if (this.cheese >= cost && !this.isTowerAt(gridX, gridY)) {
+            const existingTower = this.getTowerAt(gridX, gridY);
+
+            if (existingTower) {
+                // Tenta fazer upgrade se for uma pílula e estiver no nível 1
+                if (existingTower.type === 'pill' && existingTower.level === 1) {
+                    existingTower.upgrade();
+                }
+            } else if (this.cheese >= cost) {
                 this.towers.push(new Tower(this, gridX, gridY, this.selectedTower));
                 this.cheese -= cost;
                 this.updateUI();
@@ -76,11 +92,18 @@ export class Game {
         return this.towers.some(t => t.x === x && t.y === y);
     }
 
+    getTowerAt(x, y) {
+        return this.towers.find(t => t.x === x && t.y === y);
+    }
+
     updateUI() {
-        document.getElementById('cheese-display').innerText = `🧀 ${this.cheese}`;
+        document.getElementById('cheese-display').innerText = `🧀 ${Math.floor(this.cheese)}`;
         document.getElementById('health-display').innerText = `❤️ ${this.health}`;
         const waveDisplay = document.getElementById('wave-display');
-        if (waveDisplay) waveDisplay.innerText = `Onda: ${this.wave}`;
+        if (waveDisplay) {
+            const timeLeft = Math.max(0, Math.ceil(this.waveTimer / 60));
+            waveDisplay.innerText = `Onda: ${this.wave}/10 | Tempo: ${timeLeft}s | Score: ${this.score}`;
+        }
     }
 
     update() {
@@ -88,23 +111,42 @@ export class Game {
 
         this.frame++;
 
-        // Spawn enemies logic
-        if (this.enemiesSpawned < this.waveEnemies) {
-            if (this.frame % 150 === 0) {
-                const type = (this.wave > 2 && Math.random() > 0.7) ? 'fast' : 'basic';
-                this.enemies.push(new Enemy(this, type));
-                this.enemiesSpawned++;
-            }
-        } else if (this.enemies.length === 0 && !this.gameOver) {
-            // Start next wave
-            if (this.nextWaveFrame === 0) this.nextWaveFrame = this.frame + 180; // 3s delay
+        // Lógica de Waves e Spawning
+        if (!this.isVictory) {
+            if (this.waveTimer > 0) {
+                this.waveTimer--;
 
-            if (this.frame >= this.nextWaveFrame) {
-                this.wave++;
-                this.waveEnemies += 3;
-                this.enemiesSpawned = 0;
-                this.nextWaveFrame = 0;
+                // Calcula intervalo de spawn para distribuir inimigos nos 60 segundos
+                const spawnInterval = Math.floor(this.waveDuration / this.waveEnemiesTarget);
+
+                if (this.frame % spawnInterval === 0 && this.enemiesSpawnedInWave < this.waveEnemiesTarget) {
+                    // Determina o tipo de inimigo com base na wave
+                    let type = 'basic';
+                    if (this.wave > 1) {
+                        const rand = Math.random();
+                        if (rand > 0.7) type = 'elite'; // Inimigo melhorado
+                        else if (rand > 0.4 && this.wave > 3) type = 'fast';
+                    }
+                    this.enemies.push(new Enemy(this, type));
+                    this.enemiesSpawnedInWave++;
+                }
                 this.updateUI();
+            } else if (this.enemies.length === 0 && !this.gameOver) {
+                // Intervalo entre waves
+                if (this.nextWaveFrame === 0) this.nextWaveFrame = this.frame + 180; // 3s respiro
+
+                if (this.frame >= this.nextWaveFrame) {
+                    if (this.wave < this.maxWaves) {
+                        this.wave++;
+                        this.waveEnemiesTarget = Math.floor(this.waveEnemiesTarget * 1.2); // +20% inimigos
+                        this.enemiesSpawnedInWave = 0;
+                        this.waveTimer = this.waveDuration;
+                        this.nextWaveFrame = 0;
+                        this.updateUI();
+                    } else {
+                        this.isVictory = true;
+                    }
+                }
             }
         }
 
@@ -124,8 +166,10 @@ export class Game {
                     }
                     this.projectiles.splice(pIdx, 1);
                     if (e.health <= 0) {
+                        const reward = e.cheeseValue;
                         this.enemies.splice(eIdx, 1);
-                        this.cheese += 25;
+                        this.cheese += reward;
+                        this.score += reward; // Pontuação igual ao queijo
                         this.updateUI();
                     }
                 }
@@ -152,8 +196,9 @@ export class Game {
         // Draw background
         this.ctx.drawImage(this.bgImage, 0, 0, this.width, this.height);
 
-        // Draw grid
-        this.ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+        // Draw grid lines (Escuras com 50% alpha)
+        this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
+        this.ctx.lineWidth = 1;
         this.cells.forEach(cell => {
             this.ctx.strokeRect(cell.x, cell.y, cell.width, cell.height);
         });
@@ -161,13 +206,15 @@ export class Game {
         // Draw entities
         [...this.enemies, ...this.towers, ...this.projectiles].forEach(obj => obj.draw(this.ctx));
 
-        if (this.gameOver) {
+        if (this.gameOver || this.isVictory) {
             this.ctx.fillStyle = 'rgba(0,0,0,0.7)';
             this.ctx.fillRect(0, 0, this.width, this.height);
             this.ctx.fillStyle = 'white';
             this.ctx.font = '48px Inter';
             this.ctx.textAlign = 'center';
-            this.ctx.fillText('FIM DE JOGO', this.width / 2, this.height / 2);
+            this.ctx.fillText(this.isVictory ? 'VITÓRIA! LABORATÓRIO SALVO' : 'FIM DE JOGO', this.width / 2, this.height / 2);
+            this.ctx.font = '24px Inter';
+            this.ctx.fillText(`Score Final: ${this.score}`, this.width / 2, this.height / 2 + 50);
         }
     }
 }
