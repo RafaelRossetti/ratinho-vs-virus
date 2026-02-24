@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ratinho vs Vírus - Tower Defense</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+
+<body>
+  <div id="app">
+    <div class="game-container">
+      <canvas id="gameCanvas"></canvas>
+
+      <div class="hud">
+        <div class="hud-left" style="display: flex; gap: 15px;">
+          <div class="hud-item" id="cheese-display">🧀 100</div>
+          <div class="hud-item" id="health-display">❤️ 10</div>
+        </div>
+        <div class="hud-item" id="wave-display">Onda 1</div>
+      </div>
+
+      <div class="shop">
+        <div class="tower-card" data-type="pill">
+          <img src="" id="pill-icon" />
+          <span>Pílula</span>
+          <span>$50</span>
+        </div>
+        <div class="tower-card" data-type="cheese">
+          <div class="placeholder-icon" style="background: #fbbf24;"></div>
+          <span>Queijeira</span>
+          <span>$40</span>
+        </div>
+        <div class="tower-card" data-type="syrup">
+          <div class="placeholder-icon" style="background: #a855f7;"></div>
+          <span>Xarope</span>
+          <span>$100</span>
+        </div>
+      </div>
+
+      <div id="menu-modal" class="modal">
+        <div style="text-align: center;">
+          <h1 style="font-size: 3rem; margin-bottom: 20px;">Ratinho vs Vírus</h1>
+          <p style="margin-bottom: 30px;">Defenda seu território contra a invasão viral!</p>
+          <button class="btn" id="start-btn">Iniciar Jogo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="./main.js"></script>
+</body>
+
+</html>
