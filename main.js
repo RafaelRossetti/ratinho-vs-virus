@@ -1,4 +1,3 @@
-import './style.css';
 import { Game } from './src/engine/Game.js';
 
 const canvas = document.getElementById('gameCanvas');
