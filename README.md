@@ -34,4 +34,4 @@ O objetivo é simples: não deixe os vírus chegarem ao lado esquerdo da tela! C
 Este projeto é para fins educacionais e de diversão. Sinta-se à vontade para clonar e melhorar!
 
 ---
-Desenvolvido com ❤️ por [Seu Nome/GitHub]
+Desenvolvido com ❤️ por Rafael Rossetti
