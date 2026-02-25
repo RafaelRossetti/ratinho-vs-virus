@@ -139,3 +139,33 @@ canvas {
 .btn:hover {
   opacity: 0.9;
 }
+
+.hud-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.shop {
+  width: auto;
+  max-width: 900px;
+}
+
+.tower-card {
+  width: 100px;
+  height: 100px;
+}
+
+.tower-card img {
+  width: 60px;
+  height: 60px;
+}
+
+.upgrade-card {
+  border: 2px solid #fbbf24 !important;
+  background: rgba(251, 191, 36, 0.1) !important;
+}
+
+.upgrade-card:hover {
+  background: rgba(251, 191, 36, 0.2) !important;
+}

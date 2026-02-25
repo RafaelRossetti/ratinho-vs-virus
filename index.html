@@ -15,7 +15,9 @@
 
       <div class="hud">
         <div class="hud-left" style="display: flex; gap: 15px;">
-          <div class="hud-item" id="cheese-display">🧀 100</div>
+          <div class="hud-item" id="cheese-display">
+            <img src="./icon_cheese_HUD.png" class="hud-icon" /> <span id="cheese-value">100</span>
+          </div>
           <div class="hud-item" id="health-display">❤️ 10</div>
         </div>
         <div class="hud-item" id="wave-display">Onda 1</div>
@@ -23,19 +25,24 @@
 
       <div class="shop">
         <div class="tower-card" data-type="pill">
-          <img src="" id="pill-icon" />
-          <span>Pílula</span>
+          <img src="./Icon_Mouse_Tower_HUD.png" />
+          <span>Ratinho</span>
           <span>$50</span>
         </div>
         <div class="tower-card" data-type="cheese">
-          <div class="placeholder-icon" style="background: #fbbf24;"></div>
+          <img src="./icon_cheese_HUD.png" />
           <span>Queijeira</span>
           <span>$40</span>
         </div>
         <div class="tower-card" data-type="syrup">
-          <div class="placeholder-icon" style="background: #a855f7;"></div>
+          <img src="./icon_Xarope_HUD.png" />
           <span>Xarope</span>
           <span>$100</span>
+        </div>
+        <div class="tower-card upgrade-card" id="upgrade-damage-btn">
+          <img src="./icon_projetil_HUD.png" />
+          <span>Dano +50%</span>
+          <span>$50</span>
         </div>
       </div>
 

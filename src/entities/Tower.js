@@ -11,21 +11,26 @@ export class Tower {
         this.level = 1;
         this.damage = type === 'pill' ? 25 : 10;
         this.image = new Image();
-        this.image.src = type === 'pill' ? './mouse_tower.png.png' : '';
 
-        if (type === 'syrup') {
+        if (type === 'pill') {
+            this.image.src = './mouse_tower.png.png';
+        } else if (type === 'syrup') {
+            this.image.src = './xarope.png';
             this.fireRate = 180; // 3 segundos (60fps)
+        } else {
+            this.image.src = '';
         }
 
         // Configurações de animação
-        this.spriteWidth = 500; // Largura aproximada de cada frame (baseado na imagem 2000x1125 / 4)
-        this.spriteHeight = 281; // Altura aproximada de cada frame (1125 / 4)
+        this.spriteWidth = 256;
+        this.spriteHeight = 256;
         this.frameX = 0;
         this.frameY = 0; // Row 0: Idle, Row 1: Attack
         this.maxFrame = 3; // 4 frames por linha
         this.animTimer = 0;
         this.animSpeed = 10; // Velocidade da animação (muda frame a cada 10 game frames)
         this.isAttacking = false;
+        this.attackAnimTimer = 0;
     }
 
     upgrade() {
@@ -87,7 +92,8 @@ export class Tower {
                 Math.abs(enemy.y - this.y) < 50 && enemy.x > this.x
             );
             if (enemiesInRow.length > 0) {
-                this.game.projectiles.push(new Projectile(this.game, this.x + 40, this.y, this.type, this.damage));
+                const totalDamage = this.damage * this.game.damageMultiplier;
+                this.game.projectiles.push(new Projectile(this.game, this.x + 40, this.y, this.type, totalDamage));
             }
         } else if (this.type === 'syrup') {
             // Lança xarope 2 grids a frente (ou o máximo possível)
@@ -97,7 +103,7 @@ export class Tower {
     }
 
     draw(ctx) {
-        if (this.image.complete && this.image.src && this.type === 'pill') {
+        if (this.image.complete && this.image.src && (this.type === 'pill' || this.type === 'syrup')) {
             // Desenha o frame específico da spritesheet
             ctx.drawImage(
                 this.image,
@@ -105,10 +111,10 @@ export class Tower {
                 this.frameY * this.spriteHeight,
                 this.spriteWidth,
                 this.spriteHeight,
-                this.x - this.width / 2 - 10, // Pequeno ajuste de offset para centralizar o ratinho
-                this.y - this.height / 2 - 20,
-                this.width + 20,
-                this.height + 20
+                this.x - this.width / 2,
+                this.y - this.height / 2,
+                this.width,
+                this.height
             );
 
             // Indicador de upgrade
@@ -180,6 +186,9 @@ class SyrupShot {
         this.arcHeight = 60;
         this.distance = targetX - x;
         this.progress = 0;
+        this.image = new Image();
+        this.image.src = './projetil_xarope.png';
+        this.size = 256; // Tamanho original da sprite
     }
 
     update() {
@@ -189,20 +198,29 @@ class SyrupShot {
             this.game.projectiles = this.game.projectiles.filter(p => p !== this);
         }
         this.x = this.x + this.speed;
-        // Efeito de arco (parábola básica)
         this.currentY = this.targetY - Math.sin(this.progress * Math.PI) * this.arcHeight;
     }
 
     draw(ctx) {
-        ctx.fillStyle = '#a855f7';
-        ctx.beginPath();
-        ctx.arc(this.x, this.currentY || this.y, 10, 0, Math.PI * 2);
-        ctx.fill();
-        // Rastro
-        ctx.fillStyle = 'rgba(168, 85, 247, 0.3)';
-        ctx.beginPath();
-        ctx.arc(this.x - 10, (this.currentY || this.y) + 2, 6, 0, Math.PI * 2);
-        ctx.fill();
+        if (this.image.complete) {
+            // Escala dinâmica: começa pequena e cresce até o tamanho normal (0.4 -> 1.0)
+            const baseScale = 0.4;
+            const currentScale = baseScale + (this.progress * (1 - baseScale));
+            const drawSize = 80 * currentScale; // Aumentei um pouco o tamanho base do desenho
+
+            ctx.drawImage(
+                this.image,
+                this.x - drawSize / 2,
+                this.currentY - drawSize / 2,
+                drawSize,
+                drawSize
+            );
+        } else {
+            ctx.fillStyle = '#a855f7';
+            ctx.beginPath();
+            ctx.arc(this.x, this.currentY || this.y, 10, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
 }
 
@@ -212,6 +230,10 @@ export class Puddle {
         this.x = x;
         this.y = y;
         this.duration = 120; // 2 segundos a 60fps
+        this.image = new Image();
+        this.image.src = './poca_projetil_xarope.png';
+        this.width = 120; // Poça um pouco maior que o grid para cobrir bem
+        this.height = 120;
     }
 
     update() {
@@ -219,13 +241,23 @@ export class Puddle {
     }
 
     draw(ctx) {
-        ctx.fillStyle = 'rgba(168, 85, 247, 0.6)';
-        ctx.beginPath();
-        ctx.ellipse(this.x, this.y + 20, 50, 25, 0, 0, Math.PI * 2);
-        ctx.fill();
-        // Detalhes de bolha na poça
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-        ctx.beginPath(); ctx.arc(this.x - 15, this.y + 15, 5, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(this.x + 10, this.y + 25, 3, 0, Math.PI * 2); ctx.fill();
+        if (this.image.complete) {
+            // Aplica opacidade baseada na duração restante (fade out no final)
+            const opacity = this.duration < 20 ? this.duration / 20 : 1;
+            ctx.globalAlpha = opacity;
+            ctx.drawImage(
+                this.image,
+                this.x - this.width / 2,
+                this.y - this.height / 2,
+                this.width,
+                this.height
+            );
+            ctx.globalAlpha = 1.0;
+        } else {
+            ctx.fillStyle = 'rgba(168, 85, 247, 0.6)';
+            ctx.beginPath();
+            ctx.ellipse(this.x, this.y + 20, 50, 25, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
 }

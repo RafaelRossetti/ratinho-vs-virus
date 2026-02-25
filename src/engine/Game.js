@@ -29,6 +29,7 @@ export class Game {
         this.score = 0;
         this.maxWaves = 10;
         this.isVictory = false;
+        this.damageMultiplier = 1.0; // Multiplicador de dano global
 
         this.bgImage = new Image();
         this.bgImage.src = './background_lab.png';
@@ -88,6 +89,24 @@ export class Game {
         // Initialize first selection
         const firstCard = document.querySelector('.tower-card[data-type="pill"]');
         if (firstCard) firstCard.classList.add('active');
+
+        // Upgrade de Dano
+        const upgradeBtn = document.getElementById('upgrade-damage-btn');
+        if (upgradeBtn) {
+            upgradeBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Evita selecionar como torre
+                const cost = 50;
+                if (this.cheese >= cost) {
+                    this.cheese -= cost;
+                    this.damageMultiplier *= 1.5; // +50% de dano global
+                    this.updateUI();
+
+                    // Pequeno feedback visual no botão
+                    upgradeBtn.style.transform = 'scale(0.9)';
+                    setTimeout(() => upgradeBtn.style.transform = 'scale(1)', 100);
+                }
+            });
+        }
     }
 
     isTowerAt(x, y) {
@@ -99,8 +118,11 @@ export class Game {
     }
 
     updateUI() {
-        document.getElementById('cheese-display').innerText = `🧀 ${Math.floor(this.cheese)}`;
-        document.getElementById('health-display').innerText = `❤️ ${this.health}`;
+        const cheeseValue = document.getElementById('cheese-value');
+        if (cheeseValue) cheeseValue.innerText = Math.floor(this.cheese);
+
+        const healthDisplay = document.getElementById('health-display');
+        if (healthDisplay) healthDisplay.innerText = `❤️ ${this.health}`;
         const waveDisplay = document.getElementById('wave-display');
         if (waveDisplay) {
             const timeLeft = Math.max(0, Math.ceil(this.waveTimer / 60));

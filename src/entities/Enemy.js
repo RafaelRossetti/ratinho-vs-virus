@@ -10,8 +10,8 @@ export class Enemy {
         this.image.src = './Enemy.png.png';
 
         // Configuração de animação (ajustada para a spritesheet)
-        this.spriteWidth = 500; // Largura aproximada
-        this.spriteHeight = 350; // Altura aproximada
+        this.spriteWidth = 256;
+        this.spriteHeight = 256;
         this.frameX = 0;
         this.maxFrame = 3;
         this.animTimer = 0;
