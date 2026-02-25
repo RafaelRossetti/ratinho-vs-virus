@@ -13,13 +13,13 @@ export class Game {
         this.enemies = [];
         this.towers = [];
         this.projectiles = [];
-        this.cheese = 100;
-        this.health = 10;
+        this.cheese = 75;
+        this.health = 5;
         this.frame = 0;
         this.gameOver = false;
         this.selectedTower = 'pill';
         this.wave = 1;
-        this.waveDuration = 60 * 60; // 60 segundos a 60fps
+        this.waveDuration = 30 * 60; // 30 segundos a 60fps (antes era 60s)
         this.waveTimer = this.waveDuration;
         this.waveEnemiesTarget = 40;
         this.enemiesSpawnedInWave = 0;
@@ -122,10 +122,13 @@ export class Game {
                 if (this.frame % spawnInterval === 0 && this.enemiesSpawnedInWave < this.waveEnemiesTarget) {
                     // Determina o tipo de inimigo com base na wave
                     let type = 'basic';
-                    if (this.wave > 1) {
+
+                    if (this.wave === this.maxWaves && this.enemiesSpawnedInWave === this.waveEnemiesTarget - 1) {
+                        type = 'boss'; // Último inimigo da última wave é o Boss
+                    } else if (this.wave > 1) {
                         const rand = Math.random();
-                        if (rand > 0.7) type = 'elite'; // Inimigo melhorado
-                        else if (rand > 0.4 && this.wave > 3) type = 'fast';
+                        if (rand > 0.6) type = 'elite';
+                        else if (rand > 0.3 && this.wave > 2) type = 'fast';
                     }
                     this.enemies.push(new Enemy(this, type));
                     this.enemiesSpawnedInWave++;
@@ -138,7 +141,7 @@ export class Game {
                 if (this.frame >= this.nextWaveFrame) {
                     if (this.wave < this.maxWaves) {
                         this.wave++;
-                        this.waveEnemiesTarget = Math.floor(this.waveEnemiesTarget * 1.2); // +20% inimigos
+                        this.waveEnemiesTarget = Math.floor(this.waveEnemiesTarget * 1.35); // +35% inimigos (era 20%)
                         this.enemiesSpawnedInWave = 0;
                         this.waveTimer = this.waveDuration;
                         this.nextWaveFrame = 0;

@@ -29,8 +29,8 @@ export class Tower {
 
     update() {
         if (this.type === 'cheese') {
-            if (this.timer % 300 === 0 && this.timer > 0) { // Every 5 seconds
-                this.game.cheese += 25;
+            if (this.timer % 360 === 0 && this.timer > 0) { // Cada 6 segundos (era 5s)
+                this.game.cheese += 20; // Reduzido de 25
                 this.game.updateUI();
             }
         } else if (this.timer % this.fireRate === 0) {
