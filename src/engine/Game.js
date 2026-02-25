@@ -13,6 +13,7 @@ export class Game {
         this.enemies = [];
         this.towers = [];
         this.projectiles = [];
+        this.puddles = []; // Para o efeito do Xarope
         this.cheese = 75;
         this.health = 5;
         this.frame = 0;
@@ -37,7 +38,8 @@ export class Game {
     }
 
     initGrid() {
-        for (let y = this.topOffset; y < this.height; y += this.gridSize) {
+        // Reduzido para 4 linhas (removendo a última) para não bater com o HUD da loja
+        for (let y = this.topOffset; y < this.height - this.gridSize; y += this.gridSize) {
             for (let x = 0; x < this.width; x += this.gridSize) {
                 this.cells.push({ x, y, width: this.gridSize, height: this.gridSize });
             }
@@ -55,7 +57,7 @@ export class Game {
             const gridX = Math.floor(mouseX / this.gridSize) * this.gridSize + this.gridSize / 2;
             const gridY = Math.floor((mouseY - this.topOffset) / this.gridSize) * this.gridSize + this.gridSize / 2 + this.topOffset;
 
-            if (mouseY < this.topOffset) return; // Não clicar na HUD
+            if (mouseY < this.topOffset || mouseY >= this.height - this.gridSize) return; // Não clicar na HUD ou na área da loja
 
             const towerCosts = { 'pill': 50, 'cheese': 40, 'syrup': 100 };
             const cost = towerCosts[this.selectedTower] || 50;
@@ -154,7 +156,19 @@ export class Game {
         }
 
         // Update entities
-        [...this.enemies, ...this.towers, ...this.projectiles].forEach(obj => obj.update());
+        [...this.enemies, ...this.towers, ...this.projectiles, ...this.puddles].forEach(obj => obj.update());
+
+        // Puddle logic: Slow enemies passing through
+        this.enemies.forEach(enemy => {
+            this.puddles.forEach(puddle => {
+                const dx = enemy.x - puddle.x;
+                const dy = enemy.y - puddle.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < 50) {
+                    enemy.slowTimer = 2; // Mantém a lentidão enquanto estiver na poça
+                }
+            });
+        });
 
         // Collision detection
         this.projectiles.forEach((p, pIdx) => {
@@ -189,8 +203,9 @@ export class Game {
             }
         });
 
-        // Clean up off-screen projectiles
+        // Clean up off-screen projectiles and expired puddles
         this.projectiles = this.projectiles.filter(p => p.x < this.width);
+        this.puddles = this.puddles.filter(p => p.duration > 0);
     }
 
     draw() {
@@ -205,6 +220,9 @@ export class Game {
         this.cells.forEach(cell => {
             this.ctx.strokeRect(cell.x, cell.y, cell.width, cell.height);
         });
+
+        // Draw puddles (at ground level)
+        this.puddles.forEach(puddle => puddle.draw(this.ctx));
 
         // Draw entities
         [...this.enemies, ...this.towers, ...this.projectiles].forEach(obj => obj.draw(this.ctx));
