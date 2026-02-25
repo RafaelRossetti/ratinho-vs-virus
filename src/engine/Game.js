@@ -21,7 +21,7 @@ export class Game {
         this.wave = 1;
         this.waveDuration = 30 * 60; // 30 segundos a 60fps (antes era 60s)
         this.waveTimer = this.waveDuration;
-        this.waveEnemiesTarget = 40;
+        this.waveEnemiesTarget = 26; // Reduzido de 40 para facilitar o início
         this.enemiesSpawnedInWave = 0;
         this.enemiesDefeatedInWave = 0;
         this.nextWaveFrame = 0;
