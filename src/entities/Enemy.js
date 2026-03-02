@@ -9,14 +9,10 @@ export class Enemy {
         this.image = new Image();
         this.image.src = './Enemy.png.png';
 
-        // Configuração de animação (ajustada para a spritesheet)
-        this.spriteWidth = 256;
-        this.spriteHeight = 256;
-        this.frameX = 0;
-        this.maxFrame = 3;
-        this.animTimer = 0;
-        this.animSpeed = 8; // Um pouco mais rápido no movimento
+        // O vírus é uma imagem única, não uma spritesheet.
+        // Usamos um timer simples para uma animação sutil de escala/pulsação.
         this.timer = 0;
+        this.animSpeed = 8;
 
         const waveScale = 1 + (game.wave - 1) * 0.15; // +15% de poder por wave
         this.cheeseValue = 20 * waveScale;
@@ -53,11 +49,8 @@ export class Enemy {
         }
         this.x -= currentSpeed;
 
-        // Animação
+        // Timer para animação de pulsação
         this.timer++;
-        if (this.timer % this.animSpeed === 0) {
-            this.frameX = (this.frameX + 1) % (this.maxFrame + 1);
-        }
     }
 
     draw(ctx) {
@@ -70,16 +63,17 @@ export class Enemy {
         }
 
         if (this.image.complete) {
+            // Efeito sutil de pulsação para dar vida ao vírus
+            const pulse = 1 + Math.sin(this.timer * 0.1) * 0.05;
+            const drawW = this.width * pulse;
+            const drawH = this.height * pulse;
+
             ctx.drawImage(
                 this.image,
-                this.frameX * this.spriteWidth,
-                0, // Vírus usa apenas uma linha geralmente
-                this.spriteWidth,
-                this.spriteHeight,
-                this.x - this.width / 2,
-                this.y - this.height / 2,
-                this.width,
-                this.height
+                this.x - drawW / 2,
+                this.y - drawH / 2,
+                drawW,
+                drawH
             );
         }
 

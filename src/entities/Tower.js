@@ -21,16 +21,26 @@ export class Tower {
             this.image.src = '';
         }
 
-        // Configurações de animação
-        this.spriteWidth = 256;
-        this.spriteHeight = 256;
+        // Configurações de animação - calculadas dinamicamente após o carregamento da imagem
+        this.spriteWidth = 0;
+        this.spriteHeight = 0;
+        this.spriteCols = 4;
+        this.spriteRows = 4;
         this.frameX = 0;
         this.frameY = 0; // Row 0: Idle, Row 1: Attack
         this.maxFrame = 3; // 4 frames por linha
         this.animTimer = 0;
-        this.animSpeed = 10; // Velocidade da animação (muda frame a cada 10 game frames)
+        this.animSpeed = 10;
         this.isAttacking = false;
         this.attackAnimTimer = 0;
+        this.spriteReady = false;
+
+        // Calcula o tamanho dos frames quando a imagem carregar
+        this.image.onload = () => {
+            this.spriteWidth = Math.floor(this.image.naturalWidth / this.spriteCols);
+            this.spriteHeight = Math.floor(this.image.naturalHeight / this.spriteRows);
+            this.spriteReady = true;
+        };
     }
 
     upgrade() {
@@ -103,7 +113,7 @@ export class Tower {
     }
 
     draw(ctx) {
-        if (this.image.complete && this.image.src && (this.type === 'pill' || this.type === 'syrup')) {
+        if (this.spriteReady && this.image.complete && this.image.src && (this.type === 'pill' || this.type === 'syrup')) {
             // Desenha o frame específico da spritesheet
             ctx.drawImage(
                 this.image,
